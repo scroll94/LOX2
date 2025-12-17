@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C# Quiz - Сопоставь вопросы и ответы</title>
+    <style>
+        :root {
+            --primary: #2196F3;
+            --secondary: #1976D2;
+            --accent: #FF4081;
+            --success: #4CAF50;
+            --light: #F5F5F5;
+            --dark: #212121;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: var(--dark);
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        /* Заголовок */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Игровая область */
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .game-area {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        /* Карточки */
+        .cards-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cards-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: grab;
+            transition: all 0.3s ease;
+            border: 2px solid #e0e0e0;
+            position: relative;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.2);
+            border-color: var(--primary);
+        }
+
+        .card.dragging {
+            opacity: 0.5;
+            transform: rotate(3deg);
+        }
+
+        .card.matched {
+            border-color: var(--success);
+            background: rgba(76, 175, 80, 0.05);
+            cursor: default;
+        }
+
+        .card-number {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background: var(--primary);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .answer-card .card-number {
+            background: var(--accent);
+        }
+
+        .card-content {
+            font-size: 1rem;
+            line-height: 1.5;
+            flex-grow: 1;
+        }
+
+        /* Область сопоставления */
+        .matches-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .matches-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .match-slot {
+            background: rgba(33, 150, 243, 0.05);
+            border: 2px dashed rgba(33, 150, 243, 0.5);
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .match-slot.active {
+            background: rgba(76, 175, 80, 0.1);
+            border-color: var(--success);
+        }
+
+        .match-slot.wrong {
+            background: rgba(244, 67, 54, 0.1);
+            border-color: #F44336;
+        }
+
+        .match-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .match-question, .match-answer {
+            flex: 1;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .match-connector {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* Статистика */
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px 25px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .stat-card h3 {
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            color: #666;
+            font-weight: 600;
+        }
+
+        /* Кнопки */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(33, 150, 243, 0.1);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #388E3C;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        /* Результаты */
+        .results {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            display: none;
+            margin-top: 20px;
+        }
+
+        .results.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .score-display {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin: 20px 0;
+        }
+
+        .feedback {
+            font-size: 1.2rem;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(33, 150, 243, 0.05);
+        }
+
+        /* Анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>C# Викторина</h1>
+            <p class="subtitle">Сопоставьте 5 вопросов по программированию на C# с правильными ответами</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h3 id="matched-count">0</h3>
+                <p>Сопоставлено</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="correct-count">0</h3>
+                <p>Правильно</p>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="cards-section">
+                <h2 class="section-title">📝 Вопросы</h2>
+                <div class="cards-container" id="questions-container">
+                    <!-- Вопросы загружаются через JS -->
+                </div>
+            </div>
+
+            <div class="cards-section">
+                <h2 class="section-title">💡 Ответы</h2>
+                <div class="cards-container" id="answers-container">
+                    <!-- Ответы загружаются через JS -->
+                </div>
+            </div>
+        </div>
+
+        <div class="matches-section">
+            <h2 class="section-title">🔄 Сопоставления</h2>
+            <div class="matches-container" id="matches-container">
+                <div class="match-slot" data-question-id="1">
+                    Перетащите ответ к вопросу #1
+                </div>
+                <div class="match-slot" data-question-id="2">
+                    Перетащите ответ к вопросу #2
+                </div>
+                <div class="match-slot" data-question-id="3">
+                    Перетащите ответ к вопросу #3
+                </div>
+                <div class="match-slot" data-question-id="4">
+                    Перетащите ответ к вопросу #4
+                </div>
+                <div class="match-slot" data-question-id="5">
+                    Перетащите ответ к вопросу #5
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" id="check-btn">
+                ✅ Проверить
+            </button>
+            <button class="btn btn-secondary" id="shuffle-btn">
+                🔀 Перемешать
+            </button>
+            <button class="btn btn-success" id="results-btn">
+                📊 Результаты
+            </button>
+            <button class="btn btn-secondary" id="reset-btn">
+                🔄 Сбросить
+            </button>
+        </div>
+
+        <div class="results" id="results">
+            <h2>Результаты</h2>
+            <div class="score-display" id="final-score">0%</div>
+            <div class="feedback" id="feedback"></div>
+            <button class="btn btn-primary" id="play-again-btn" style="margin-top: 20px;">
+                🎮 Играть снова
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 5 вопросов и 5 ответов
+        const questionsData = [
+            {
+                id: 1,
+                question: "С какого метода начинается выполнение программы на C#?",
+                answer: "Main()"
+            },
+            {
+                id: 2,
+                question: "Что такое инкапсуляция в ООП?",
+                answer: "Сокрытие данных и методов внутри класса"
+            },
+            {
+                id: 3,
+                question: "Какой тип данных используется для true/false?",
+                answer: "bool"
+            },
+            {
+                id: 4,
+                question: "Как получить длину строки в C#?",
+                answer: "Свойство .Length"
+            },
+            {
+                id: 5,
+                question: "Какой цикл выполняется хотя бы один раз?",
+                answer: "do-while"
+            }
+        ];
+
+        // Переменные состояния
+        let matchedPairs = new Map(); // Map<questionId, answerId>
+        let correctMatches = 0;
+
+        // Инициализация игры
+        function initGame() {
+            // Создаем вопросы
+            const questionsContainer = document.getElementById('questions-container');
+            questionsContainer.innerHTML = '';
+            
+            questionsData.forEach(q => {
+                const card = document.createElement('div');
+                card.className = 'card question-card';
+                card.id = `question-${q.id}`;
+                card.draggable = false; // Вопросы не перетаскиваются
+                
+                card.innerHTML = `
+                    <div class="card-number">${q.id}</div>
+                    <div class="card-content">${q.question}</div>
+                `;
+                
+                questionsContainer.appendChild(card);
+            });
+
+            // Создаем ответы (перемешанные)
+            const answers = [...questionsData];
+            shuffleArray(answers);
+            
+            const answersContainer = document.getElementById('answers-container');
+            answersContainer.innerHTML = '';
+            
+            answers.forEach(a => {
+                const card = document.createElement('div');
+                card.className = 'card answer-card';
+                card.id = `answer-${a.id}`;
+                card.draggable = true;
+                card.dataset.id = a.id;
+                
+                card.innerHTML = `
+                    <div class="card-number">${a.id}</div>
+                    <div class="card-content">${a.answer}</div>
+                `;
+                
+                answersContainer.appendChild(card);
+            });
+
+            // Настраиваем drag-and-drop
+            setupDragAndDrop();
+            
+            // Сбрасываем статистику
+            matchedPairs.clear();
+            correctMatches = 0;
+            updateStats();
+            
+            // Очищаем слоты
+            document.querySelectorAll('.match-slot').forEach(slot => {
+                slot.innerHTML = `Перетащите ответ к вопросу #${slot.dataset.questionId}`;
+                slot.className = 'match-slot';
+            });
+        }
+
+        // Настройка перетаскивания
+        function setupDragAndDrop() {
+            const answerCards = document.querySelectorAll('.answer-card');
+            const matchSlots = document.querySelectorAll('.match-slot');
+            
+            answerCards.forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+            });
+            
+            matchSlots.forEach(slot => {
+                slot.addEventListener('dragover', handleDragOver);
+                slot.addEventListener('dragenter', handleDragEnter);
+                slot.addEventListener('dragleave', handleDragLeave);
+                slot.addEventListener('drop', handleDrop);
+            });
+        }
+
+        // Обработчики событий drag-and-drop
+        function handleDragStart(e) {
+            this.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', this.dataset.id);
+        }
+
+        function handleDragEnd() {
+            this.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            this.classList.add('active');
+        }
+
+        function handleDragLeave() {
+            this.classList.remove('active');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('active');
+            
+            const answerId = e.dataTransfer.getData('text/plain');
+            const questionId = this.dataset.questionId;
+            const answerCard = document.getElementById(`answer-${answerId}`);
+            
+            if (!answerCard) return;
+            
+            // Проверяем, не используется ли ответ уже
+            const isAlreadyUsed = Array.from(matchedPairs.values()).includes(parseInt(answerId));
+            if (isAlreadyUsed) {
+                alert('Этот ответ уже используется для другого вопроса!');
+                return;
+            }
+            
+            // Если для этого вопроса уже был ответ - снимаем его
+            if (matchedPairs.has(parseInt(questionId))) {
+                const oldAnswerId = matchedPairs.get(parseInt(questionId));
+                const oldAnswerCard = document.getElementById(`answer-${oldAnswerId}`);
+                if (oldAnswerCard) {
+                    oldAnswerCard.classList.remove('matched');
+                }
+            }
+            
+            // Сохраняем сопоставление
+            matchedPairs.set(parseInt(questionId), parseInt(answerId));
+            answerCard.classList.add('matched');
+            
+            // Показываем в слоте
+            const answer = questionsData.find(q => q.id === parseInt(answerId));
+            this.innerHTML = `
+                <div class="match-item">
+                    <div class="match-question">Вопрос #${questionId}</div>
+                    <div class="match-connector">→</div>
+                    <div class="match-answer">${answer.answer}</div>
+                </div>
+            `;
+            
+            updateStats();
+        }
+
+        // Обновление статистики
+        function updateStats() {
+            const matchedCount = matchedPairs.size;
+            document.getElementById('matched-count').textContent = matchedCount;
+            document.getElementById('correct-count').textContent = correctMatches;
+        }
+
+        // Перемешивание массива
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Проверка сопоставлений
+        function checkMatches() {
+            let correct = 0;
+            
+            matchedPairs.forEach((answerId, questionId) => {
+                const question = questionsData.find(q => q.id === questionId);
+                const answer = questionsData.find(a => a.id === answerId);
+                
+                const slot = document.querySelector(`.match-slot[data-question-id="${questionId}"]`);
+                
+                // Проверяем правильность
+                const isCorrect = question.answer === answer.answer;
+                
+                if (isCorrect) {
+                    correct++;
+                    slot.classList.remove('wrong');
+                    slot.classList.add('active');
+                } else {
+                    slot.classList.remove('active');
+                    slot.classList.add('wrong');
+                }
+            });
+            
+            correctMatches = correct;
+            updateStats();
+            
+            // Анимация
+            document.querySelectorAll('.match-slot').forEach(slot => {
+                slot.classList.add('pulse');
+                setTimeout(() => slot.classList.remove('pulse'), 300);
+            });
+            
+            alert(`Проверка завершена!\nПравильно: ${correct} из ${matchedPairs.size}`);
+        }
+
+        // Показать результаты
+        function showResults() {
+            checkMatches(); // Сначала проверяем
+            
+            const totalPossible = 5;
+            const percentage = matchedPairs.size > 0 ? 
+                Math.round((correctMatches / matchedPairs.size) * 100) : 0;
+            
+            document.getElementById('final-score').textContent = `${percentage}%`;
+            
+            // Генерация обратной связи
+            let feedback = '';
+            if (percentage === 100 && matchedPairs.size === 5) {
+                feedback = '🎉 Отлично! Все ответы правильные!';
+            } else if (percentage >= 80) {
+                feedback = '👍 Хорошо! Вы знаете C#!';
+            } else if (percentage >= 60) {
+                feedback = '😊 Неплохо! Есть что повторить.';
+            } else if (percentage >= 40) {
+                feedback = '📚 Есть над чем поработать.';
+            } else {
+                feedback = '💪 Продолжайте учиться!';
+            }
+            
+            document.getElementById('feedback').textContent = feedback;
+            document.getElementById('results').classList.add('active');
+        }
+
+        // Сброс игры
+        function resetGame() {
+            initGame();
+            document.getElementById('results').classList.remove('active');
+        }
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            initGame();
+            
+            // Назначаем обработчики кнопок
+            document.getElementById('check-btn').addEventListener('click', checkMatches);
+            document.getElementById('shuffle-btn').addEventListener('click', initGame);
+            document.getElementById('results-btn').addEventListener('click', showResults);
+            document.getElementById('reset-btn').addEventListener('click', resetGame);
+            document.getElementById('play-again-btn').addEventListener('click', resetGame);
+        });
+
+        // Добавляем анимации при наведении
+        document.addEventListener('mouseover', function(e) {
+            if (e.target.classList.contains('answer-card') && 
+                !e.target.classList.contains('matched')) {
+                e.target.style.transform = 'translateY(-3px)';
+            }
+        });
+
+        document.addEventListener('mouseout', function(e) {
+            if (e.target.classList.contains('answer-card') && 
+                !e.target.classList.contains('matched') &&
+                !e.target.classList.contains('dragging')) {
+                e.target.style.transform = 'translateY(0)';
+            }
+        });
+    </script>
+</body>
+</html>
